@@ -1,26 +1,32 @@
 import numpy as np
 
 # First generate the actual data D
-mu, sigma, D_size = 0.3, 0.45, 1000
+mu, sigma, D_size = 0.3, 0.45, 100
 Data = np.random.normal(mu, sigma, D_size)
 
 
 # Define the likelihood function P(D|theta, model)
 def L(D, theta):
-    return np.exp(np.sum([-np.power(d - theta[0], 2.) / (2 * np.power(theta[1], 2.)) for d in D])) / np.power(
-        1 / (theta[1] * np.sqrt(2 * np.pi)), D_size)
+    return np.product(
+        [np.exp(-np.power(d - theta[0], 2.) / (2 * np.power(theta[1], 2.)) * np.sqrt(2 * np.pi)) for d in D ]
+    )
 
+    # a = np.exp(np.sum([-np.power(d - theta[0], 2.) / (2 * np.power(theta[1], 2.)) for d in D]))
+    # b = np.power(
+    #     1 / (theta[1] * np.sqrt(2 * np.pi)), D_size)
+    # return a / b
 
 # Define Prior pi(theta), here theta 2 dimensional, assume within range of unity
-N_sample = 2000  # Number of samples of theta to be drawn in prior reservoir
+N_sample = 50  # Number of samples of theta to be drawn in prior reservoir
 mu_sample = np.random.uniform(1e-5, 1, N_sample)
 sigma_sample = np.random.uniform(1e-5, 1, N_sample)
-prior = [(mu_sample[i], sigma_sample[i]) for i in range(N_sample)]
+prior = np.vstack((mu_sample, sigma_sample)).T
+# prior = [(mu_sample[i], sigma_sample[i]) for i in range(N_sample)]
 mask = np.arange(N_sample)
 
 # Main loop of nested sampling algorithm
-J = 1000  # Termination number of iteration steps
-N = 5  # Number of samples from prior kept at each step
+J = 100  # Termination number of iteration steps
+N = 3  # Number of samples from prior kept at each step
 sample_numbers = np.random.choice(mask, N, replace=False)
 prior_sample = [prior[i] for i in sample_numbers]
 np.delete(mask, sample_numbers)
