@@ -1,7 +1,7 @@
 import numpy as np
 
 # First generate the actual data D
-mu, sigma, D_size = 0.3, 0.45, 100
+mu, sigma, D_size = 0.3, 0.45, 1000
 Data = np.random.normal(mu, sigma, D_size)
 
 
@@ -17,7 +17,7 @@ def L(D, theta):
     # return a / b
 
 # Define Prior pi(theta), here theta 2 dimensional, assume within range of unity
-N_sample = 50  # Number of samples of theta to be drawn in prior reservoir
+N_sample = 200  # Number of samples of theta to be drawn in prior reservoir
 mu_sample = np.random.uniform(1e-5, 1, N_sample)
 sigma_sample = np.random.uniform(1e-5, 1, N_sample)
 prior = np.vstack((mu_sample, sigma_sample)).T
@@ -25,8 +25,8 @@ prior = np.vstack((mu_sample, sigma_sample)).T
 mask = np.arange(N_sample)
 
 # Main loop of nested sampling algorithm
-J = 100  # Termination number of iteration steps
-N = 3  # Number of samples from prior kept at each step
+J = 20  # Termination number of iteration steps
+N = 5  # Number of samples from prior kept at each step
 sample_numbers = np.random.choice(mask, N, replace=False)
 prior_sample = [prior[i] for i in sample_numbers]
 np.delete(mask, sample_numbers)
