@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 from getdist.mcsamples import MCSamplesFromCobaya
 import getdist.plots as gdplt
 from cobaya.run import run
-
 plt.switch_backend("TkAgg")
 
 

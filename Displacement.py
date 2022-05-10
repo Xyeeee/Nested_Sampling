@@ -1,5 +1,3 @@
-# Adam Ormondroyd
-# from mpi4py import MPI
 import os
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,11 +25,10 @@ DIM_NUM = 6
 # Load the planck samples into MCMCSamples object
 root = 'base/plikHM_TTTEEE_lowl_lowE_lensing/base_plikHM_TTTEEE_lowl_lowE_lensing'
 planck_samples = MCMCSamples(root=root)
-planck_samples["gamma"] = np.random.beta(DIM_NUM, 1, (planck_samples.shape[0]))
+planck_samples["delta"] = np.random.uniform(0., 1., (planck_samples.shape[0]))
 planck_samples["beta"] = np.random.beta(1, DIM_NUM, (planck_samples.shape[0]))
 # planck_samples["gamma"] = np.random.uniform(1e-5, 1., (planck_samples.shape[0]))
-#planck_samples["beta"] = np.random.rand((planck_samples.shape[0]))
-planck_samples.limits["gamma"] = (1e-5, 1.)
+planck_samples.limits["delta"] = (0., 1.)
 planck_samples.limits["beta"] = (0., 1.)
 
 # Define the parameters we're working with (up to the first 27 -- which are the 'true' rather than derived parameters)
@@ -41,6 +38,9 @@ paramnames = np.append(paramnames, planck_samples.columns[-1])
 mu = planck_samples[paramnames].mean().values
 Sig = planck_samples[paramnames].cov().values
 invSig = np.linalg.inv(Sig[:-2, :-2])
+
+# implement bad prior center
+bad_mu = mu - 3 * np.sqrt(np.diag(Sig))
 
 bounds = np.array([planck_samples.limits[p] for p in paramnames], dtype=float)
 lower = bounds[:-2, 0]
@@ -57,13 +57,13 @@ def loglikelihood(theta):
 def loglikelihood_tilde(theta_full):
     theta = theta_full[:-2]
     beta = theta_full[-1]
-    gamma = theta_full[-2]
-    return loglikelihood(theta)[0] + np.log(pi(theta) / pi_tilde(theta, beta, gamma)), []
+    delta = theta_full[-2]
+    return loglikelihood(theta)[0] + np.log(pi(theta) / pi_tilde(theta, beta, delta)), []
 
 
-def pi_tilde(theta, beta, gamma):
-    upper_new = mu[:-2] + (upper - mu[:-2]) * (1-gamma)
-    lower_new = mu[:-2] - (mu[:-2] - lower) * (1-gamma)
+def pi_tilde(theta, beta, delta):
+    upper_new = bad_mu[:-2] + (2 * delta) * 3 * np.sqrt(np.diag(Sig))[:-2]
+    lower_new = bad_mu[:-2] - (2 - 2 * delta) * 3 * np.sqrt(np.diag(Sig))[:-2]
     diff_new = upper_new - lower_new
     vol_new = np.prod(diff_new)
     result = beta * ((theta < upper) & (theta > lower)).mean() / vol_og + (1 - beta) * (
@@ -77,12 +77,10 @@ def pi(theta):
 
 def prior(cube_full):
     cube = cube_full[:-2]
-    # beta = cube_full[-1]
-    beta = 0
-    gamma = cube_full[-2]
-    # Tightened prior bounds, will improve the convergence
-    upper_new = mu[:-2] + (upper - mu[:-2]) * (1-gamma)
-    lower_new = mu[:-2] - (mu[:-2] - lower) * (1-gamma)
+    beta = cube_full[-1]
+    delta = cube_full[-2]
+    upper_new = bad_mu[:-2] + (2 * delta) * 3 * np.sqrt(np.diag(Sig))[:-2]
+    lower_new = bad_mu[:-2] - (2 - 2 * delta) * 3 * np.sqrt(np.diag(Sig))[:-2]
     diff_new = upper_new - lower_new
     x_1 = np.zeros(len(paramnames) - 2)
     x_2 = (beta * (lower_new - lower) / diff_og)
@@ -99,7 +97,7 @@ def prior(cube_full):
 
     theta_full = np.empty_like(cube_full)
     theta_full[:-2] = theta
-    theta_full[-2] = gamma
+    theta_full[-2] = delta
     theta_full[-1] = beta
     return theta_full
 

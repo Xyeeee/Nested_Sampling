@@ -4,6 +4,7 @@
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/PolyChordLite" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/anesthetic" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cobaya" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/polychord/PolyChordLite" vcs="Git" />
   </component>
 </project>
