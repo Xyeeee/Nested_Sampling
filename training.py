@@ -7,7 +7,7 @@ import tensorflow as tf
 from keras import layers
 import re
 
-plt.switch_backend("TkAgg")
+# plt.switch_backend("TkAgg")
 
 # Load the planck samples into MCMCSamples object
 root = 'base/plikHM_TTTEEE_lowl_lowE_lensing/base_plikHM_TTTEEE_lowl_lowE_lensing'
@@ -453,15 +453,12 @@ class PolychordProcess:
             for _ in range(7):
                 f.readline()
             n_dead = int(f.readline().split()[1])
-        reward = -n_dead/n_live
+        reward = 100 - n_dead / n_live
         new_state = self.state
         new_state[-1] = n_dead
 
         # Recording transition tuple into Buffer
         self.buffer.record((self.state, self.action, reward, new_state))
-
-        # Calculating next action
-        tf_prev_state = tf.expand_dims(tf.convert_to_tensor(new_state), 0)
 
         # Accumulating episodic reward
         self.episodic_reward += reward
@@ -483,9 +480,7 @@ for ep in range(total_episodes):
     env.run()
     ep_reward_list.append(env.episodic_reward)
 
-    # Mean of last 40 episodes
-    avg_reward = np.mean(ep_reward_list[-5:])
-    print("Episode * {} * Avg Reward is ==> {}".format(ep, avg_reward))
+    print("Episode * {} * Avg Reward is ==> {}".format(ep, episodic_reward))
     # x = np.arange(env.counter + 1)
     # plt.plot(x, env.action_list, label="action")
     # plt.xlabel("Iteration")
@@ -495,17 +490,18 @@ for ep in range(total_episodes):
     # plt.title("Action and beta against iterations in one sampling run")
     # plt.show()
 
-    avg_reward_list.append(avg_reward)
-
 # Plotting graph
-# Episodes versus Avg. Rewards
-plt.plot(avg_reward_list)
-plt.xlabel("Episode")
-plt.ylabel("Avg. Epsiodic Reward")
-plt.show()
+# # Episodes versus Avg. Rewards
+# plt.plot(avg_reward_list)
+# plt.xlabel("Episode")
+# plt.ylabel("Avg. Epsiodic Reward")
+# plt.show()
+try:
+    np.savetxt('reward_list_1.csv', ep_reward_list, delimiter=',')
+    actor_model.save_weights("actor_weights.h5")
+    critic_model.save_weights("critic_weights.h5")
 
-actor_model.save_weights("actor_weights.h5")
-critic_model.save_weights("critic_weights.h5")
-
-target_actor.save_weights("actor_target_weights.h5")
-target_critic.save_weights("critic_target_weights.h5")
+    target_actor.save_weights("actor_target_weights.h5")
+    target_critic.save_weights("critic_target_weights.h5")
+except Exception:
+    pass
